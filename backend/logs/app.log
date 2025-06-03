@@ -7666,3 +7666,8 @@ TypeError: Object of type bytes is not JSON serializable
 2025-06-03 22:33:57,706 - app - INFO - RepositoryModel instance created
 2025-06-03 22:33:57,706 - app - INFO - Calling get_repository_stats...
 2025-06-03 22:33:58,082 - app - INFO - CSV file loaded with 70 rows
+2025-06-04 00:09:27,097 - app - INFO - Database and tables initialized successfully
+2025-06-04 00:09:51,584 - app - INFO - Listing repositories for user_id: 4
+2025-06-04 00:09:51,613 - app - INFO - Successfully retrieved 2 repositories
+2025-06-04 00:09:51,620 - app - INFO - Listing repositories for user_id: 4
+2025-06-04 00:09:51,662 - app - INFO - Successfully retrieved 2 repositories
