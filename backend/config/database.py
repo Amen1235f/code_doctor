@@ -8,9 +8,9 @@ logger = logging.getLogger(__name__)
 class DatabaseConfig:
     HOST = "localhost"
     USER = "root"
-    PASSWORD = "npwd"
-    DATABASE = "ahey"
-    PORT = 3306
+    PASSWORD = "."
+    DATABASE = "."
+    PORT = .
 
     @classmethod
     def get_connection(cls):
