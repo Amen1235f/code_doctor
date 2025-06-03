@@ -7,7 +7,7 @@ import time
 from http.client import RemoteDisconnected
 from datetime import datetime
 
-github_token = "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"
+github_token = "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"
 headers = {
     "Authorization": f"token {github_token}",
     "Accept": "application/vnd.github.v3+json"
@@ -43,7 +43,7 @@ def fetch_and_format_repo_info(repo_url):
     else:
         raise Exception(f"GitHub API Error {response.status_code}: {response.text}")
 
-def save_to_db_with_dynamic_table(repo_info):
+def save_to_db_with_dynamic_table(repo_info, user_id, owner=None):
     try:
         connection = pymysql.connect(**db_config)
         with connection.cursor() as cursor:
@@ -55,13 +55,15 @@ def save_to_db_with_dynamic_table(repo_info):
                 stars INT,
                 forks INT,
                 open_issues INT,
-                language VARCHAR(50)
+                language VARCHAR(50),
+                user_id INT,
+                username VARCHAR(255)  -- New column for repo owner
             );
             """
             cursor.execute(create_table_sql)
             insert_data_sql = """
-            INSERT INTO repository (name, description, stars, forks, open_issues, language)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO repository (name, description, stars, forks, open_issues, language, user_id, username)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """
             cursor.execute(insert_data_sql, (
                 repo_info["Name"],
@@ -69,13 +71,17 @@ def save_to_db_with_dynamic_table(repo_info):
                 repo_info["Stars"],
                 repo_info["Forks"],
                 repo_info["Open Issues"],
-                repo_info["Language"]
+                repo_info["Language"],
+                user_id,
+                owner  # Store the owner (username)
             ))
             connection.commit()
             repo_id = cursor.lastrowid
             print(f"Repository information saved successfully with ID: {repo_id}")
+            return repo_id
     except Exception as e:
         print(f"Error while saving to database: {e}")
+        return None
     finally:
         if connection:
             connection.close()
@@ -914,20 +920,16 @@ def save_issues_to_db(repo_id, cleaned_issues):
             connection.close()
 
 # --- MAIN ASYNC ORCHESTRATOR ---
-async def process_github_repository_async(repo_url):
+async def process_github_repository_async(repo_url, user_id):
     repo_id = None
     connection = None
     try:
         print(f"Processing repository: {repo_url}")
         repo_info = fetch_and_format_repo_info(repo_url)
-        save_to_db_with_dynamic_table(repo_info)
-        connection = pymysql.connect(**db_config)
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT id FROM repository WHERE name=%s ORDER BY id DESC LIMIT 1", (repo_info["Name"],))
-            result = cursor.fetchone()
-            if not result:
-                raise Exception(f"Could not retrieve repository ID for {repo_info['Name']} after saving.")
-            repo_id = result[0]
+        owner, _ = extract_owner_repo(repo_url)  # Get owner
+        repo_id = save_to_db_with_dynamic_table(repo_info, user_id, owner=owner)
+        if not repo_id:
+            raise Exception("Could not save repository to DB.")
         if connection:
             connection.close()
             connection = None
