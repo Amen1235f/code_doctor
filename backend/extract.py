@@ -7,7 +7,7 @@ import time
 from http.client import RemoteDisconnected
 from datetime import datetime
 
-github_token = "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"
+github_token = SECRET
 headers = {
     "Authorization": f"token {github_token}",
     "Accept": "application/vnd.github.v3+json"
